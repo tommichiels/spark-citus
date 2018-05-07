@@ -20,6 +20,10 @@
  */
 package xbird.util.hashes;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+
 /**
  * Produces 32-bit hash for hash table lookup.
  *
@@ -43,9 +47,47 @@ public final class JenkinsHash {
     /** matches postgres hashint4() function.  Needs to be LITTLE_ENDIAN byte array of 4 bytes from an int, e.g.
       ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(myInt).array()
     */
-    public static int postgresHashint4(final byte[] key) {
-      return hash32(key, 4, 3923095);
+    public static int postgresHashint4(Integer key) {
+      final byte[] keyBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(key).array();  	   	
+      return hash32(keyBytes, 4, 3923095);
     }
+    
+    
+    
+    
+	/**
+	 * matches postgres hashint8() function. Needs to be LITTLE_ENDIAN byte
+	 * array of 8 bytes from an log, e.g.
+	 * ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(myInt).array()
+	 */
+	public static int postgresHashint8(Long key) {
+		final byte[] keyBytes = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(key).array();
+		
+		
+		byte[] lohalf= Arrays.copyOfRange(keyBytes,4,8);
+		byte[] hihalf= Arrays.copyOfRange(keyBytes,0,4);
+		
+		byte[] result = new byte[4];
+		
+		int i = 0;
+		
+		
+		
+        if(key>=0){
+        	
+        	for (byte b : lohalf)
+    			result[i] = (byte) (b ^ hihalf[i++]);
+        	
+        }else{
+        	
+        	for (byte b : lohalf)
+    			result[i] = (byte) (b ^ ~hihalf[i++]);
+        	
+        }
+		
+		return hash32(result, 4, 3923095);
+	}
+    
 
     public static int hash32(final byte[] key, final int initval) {
         return hash32(key, key.length, initval);

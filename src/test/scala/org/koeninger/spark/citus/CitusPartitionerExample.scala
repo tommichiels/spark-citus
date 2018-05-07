@@ -72,8 +72,8 @@ object CitusPartitionerExample {
   def initJdbc(hostAndPort: String): Unit = connected.synchronized {
     if (!connected(hostAndPort)) {
       val driver = "org.postgresql.Driver"
-      val databaseName = "cody"
-      val user = "cody"
+      val databaseName = "tommichiels"
+      val user = "tommichiels"
       val password = ""
       val extraParams = "stringtype=unspecified"
       val url = s"jdbc:postgresql://$hostAndPort/$databaseName?$extraParams"

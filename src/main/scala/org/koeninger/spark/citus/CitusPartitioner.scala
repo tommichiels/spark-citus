@@ -20,6 +20,8 @@ class CitusPartitioner(placements: Array[ShardPlacement]) extends Partitioner {
   /** @param key should be a tuple of (table: String, key: Int), or an instance of CitusKey */
   override def getPartition(key: Any): Int = {
     key match {
+       case (table: String, k: Long) =>
+        findPartitionLong(table, k)
       case (table: String, k: Int) =>
         findPartition(table, k)
       case k: CitusKey =>
@@ -93,9 +95,14 @@ class CitusPartitioner(placements: Array[ShardPlacement]) extends Partitioner {
 
   /** given a table name and UNhashed value, find the partition aka placement index */
   def findPartition(tableName: String, unhashed: Int): Int = {
-    val bb = getByteBuf
-    bb.clear
-    val hashed = JenkinsHash.postgresHashint4(bb.putInt(unhashed).array)
+    val hashed = JenkinsHash.postgresHashint4(unhashed)
+
+    (tables.indexOf(tableName) * buckets.size) + findBucket(hashed)
+  }
+  
+   /** given a table name and UNhashed value, find the partition aka placement index */
+  def findPartitionLong(tableName: String, unhashed: Long): Int = {
+    val hashed = JenkinsHash.postgresHashint8(unhashed)
 
     (tables.indexOf(tableName) * buckets.size) + findBucket(hashed)
   }
